@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { getBaseUrl } from "@/lib/site";
 import { listPublishedPosts } from "@/lib/storage/posts";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
   const posts = await listPublishedPosts();
@@ -15,4 +17,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
   ];
 }
-
