@@ -48,6 +48,7 @@ echo "Setting app settings"
 az webapp config appsettings set \
   --name "$AZURE_WEBAPP_NAME" \
   --resource-group "$AZURE_RESOURCE_GROUP" \
+  --output none \
   --settings \
   SCM_DO_BUILD_DURING_DEPLOYMENT=true \
   WILDLIFE_BLOGGER_BASE_URL="$BASE_URL" \
