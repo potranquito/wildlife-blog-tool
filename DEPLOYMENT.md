@@ -20,6 +20,7 @@ From the repo root:
 ```bash
 export WILDLIFE_BLOGGER_ADMIN_PASSWORD='...'
 export WILDLIFE_BLOGGER_SESSION_SECRET='...'
+export WILDLIFE_BLOGGER_DATA_DIR='/home/wildlife-blogger-data'
 
 # Optional (OpenAI)
 export OPENAI_API_KEY='...'
@@ -32,4 +33,4 @@ After deployment:
 
 - Public blog: `https://<app>.azurewebsites.net/blog`
 - Admin login: `https://<app>.azurewebsites.net/login`
-
+- Health check: `https://<app>.azurewebsites.net/api/health`
