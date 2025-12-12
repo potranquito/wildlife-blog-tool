@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+:root {
+  --wb-bg0: #04110c;
+  --wb-bg1: #071a12;
+  --wb-fg: #eef5ef;
+  --wb-muted: rgba(238, 245, 239, 0.72);
+  --wb-card: rgba(7, 26, 18, 0.72);
+  --wb-border: rgba(238, 245, 239, 0.14);
+  --wb-accent: #56d18b;
+  --wb-accent2: #89f7c0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--wb-fg);
+  background:
+    radial-gradient(900px 500px at 10% 10%, rgba(86, 209, 139, 0.18), transparent 60%),
+    radial-gradient(700px 500px at 90% 30%, rgba(137, 247, 192, 0.12), transparent 55%),
+    radial-gradient(900px 700px at 60% 95%, rgba(71, 148, 255, 0.06), transparent 60%),
+    linear-gradient(180deg, var(--wb-bg0), var(--wb-bg1));
+}
+
+::selection {
+  background: rgba(86, 209, 139, 0.25);
+}
+
+.wb-card {
+  background: var(--wb-card);
+  border: 1px solid var(--wb-border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.wb-input {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+.wb-input:focus {
+  border-color: rgba(86, 209, 139, 0.55);
+  box-shadow: 0 0 0 4px rgba(86, 209, 139, 0.12);
+}
+
+.wb-button {
+  border: 1px solid rgba(86, 209, 139, 0.35);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(86, 209, 139, 0.18), rgba(86, 209, 139, 0.06));
+}
+.wb-button:hover {
+  border-color: rgba(86, 209, 139, 0.55);
+}
+.wb-button:disabled {
+  opacity: 0.55;
+}
+
+.wb-link {
+  color: var(--wb-accent2);
+  text-decoration: underline;
+  text-decoration-color: rgba(137, 247, 192, 0.4);
+  text-underline-offset: 3px;
+}
+.wb-link:hover {
+  text-decoration-color: rgba(137, 247, 192, 0.7);
+}
+
+.wb-markdown h1 {
+  font-size: 2rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin: 0.25rem 0 1rem;
+}
+.wb-markdown h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.75rem;
+}
+.wb-markdown h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+}
+.wb-markdown p {
+  margin: 0.75rem 0;
+  line-height: 1.8;
+  color: rgba(238, 245, 239, 0.92);
+}
+.wb-markdown ul,
+.wb-markdown ol {
+  margin: 0.75rem 0 0.75rem 1.25rem;
+}
+.wb-markdown li {
+  margin: 0.35rem 0;
+}
+.wb-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+  padding: 0.1em 0.35em;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(238, 245, 239, 0.12);
+}
+.wb-markdown pre {
+  padding: 14px 16px;
+  overflow: auto;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(238, 245, 239, 0.12);
+}
+.wb-markdown a {
+  color: var(--wb-accent2);
+  text-decoration: underline;
+  text-decoration-color: rgba(137, 247, 192, 0.4);
+  text-underline-offset: 3px;
+}
+.wb-markdown a:hover {
+  text-decoration-color: rgba(137, 247, 192, 0.7);
+}
+.wb-markdown blockquote {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid rgba(86, 209, 139, 0.6);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+}
+
