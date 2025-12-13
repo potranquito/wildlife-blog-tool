@@ -117,7 +117,7 @@ export default function OnboardingClient({ initial }: { initial: OrganizationPro
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Onboarding failed");
 
-      router.push("/dashboard");
+      router.push(mode === "complete" ? "/dashboard/knowledge" : "/dashboard");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Onboarding failed");
@@ -316,4 +316,3 @@ export default function OnboardingClient({ initial }: { initial: OrganizationPro
     </div>
   );
 }
-
