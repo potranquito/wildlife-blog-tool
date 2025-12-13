@@ -3,12 +3,13 @@ import { initStorage } from "@/lib/storage/init";
 import { ORG_PROFILE_PATH } from "@/lib/storage/paths";
 import type { OrganizationProfile } from "@/lib/storage/types";
 import { makeSeedProfile } from "@/lib/storage/seed";
+import { normalizeOrgProfile } from "@/lib/storage/orgProfile";
 
 export async function getOrgProfile(): Promise<OrganizationProfile> {
   await initStorage();
   try {
     const raw = await readFile(ORG_PROFILE_PATH, "utf8");
-    return JSON.parse(raw) as OrganizationProfile;
+    return normalizeOrgProfile(JSON.parse(raw));
   } catch {
     return makeSeedProfile();
   }
@@ -19,4 +20,3 @@ export async function updateOrgProfile(profile: OrganizationProfile) {
   await writeFile(ORG_PROFILE_PATH, JSON.stringify(profile, null, 2), "utf8");
   return profile;
 }
-

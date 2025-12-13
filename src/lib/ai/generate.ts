@@ -67,7 +67,13 @@ export async function generateBlogDraft(args: {
 function buildContext(org: OrganizationProfile, sources: KnowledgeSource[]) {
   const chunks: string[] = [];
   chunks.push(
-    `Organization name: ${org.name}\nTagline: ${org.tagline}\nMission: ${org.mission}\nVoice guidelines: ${org.voiceGuidelines}\nPreferred terms: ${org.preferredTerms.join(
+    `Organization name: ${org.name}\nWebsite: ${org.website || "(not provided)"}\nTagline: ${
+      org.tagline
+    }\nMission: ${org.mission}\nFocus areas: ${
+      org.focusAreas.length ? org.focusAreas.join(", ") : "(not specified)"
+    }\nObjectives: ${org.objectives.length ? org.objectives.join(", ") : "(not specified)"}\nVoice guidelines: ${
+      org.voiceGuidelines
+    }\nPreferred terms: ${org.preferredTerms.join(
       ", "
     )}\nAvoid terms: ${org.avoidTerms.join(", ")}`
   );
@@ -98,6 +104,7 @@ function buildPrompt(
   return `
 You are a senior wildlife conservation writer and SEO strategist.
 Write for a wildlife conservation organization. Be accurate, calm, hopeful, and action-oriented.
+Use the organization’s stated objectives and focus areas from the context.
 Avoid sensationalism and avoid making precise factual claims unless supported by the provided sources; when uncertain, use cautious language and suggest verification.
 Do not mention being an AI.
 
@@ -122,4 +129,3 @@ Context sources (may be partial excerpts):
 ${context}
 `.trim();
 }
-

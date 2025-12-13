@@ -82,16 +82,24 @@ function takeFirst(arr: string[], max: number) {
     .slice(0, max);
 }
 
-export async function fetchAndExtractPage(inputUrl: string): Promise<ExtractedPage> {
+export async function fetchAndExtractPage(
+  inputUrl: string,
+  opts?: {
+    timeoutMs?: number;
+    userAgent?: string;
+  }
+): Promise<ExtractedPage> {
   const url = await assertSafeHttpUrl(inputUrl);
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeoutMs = opts?.timeoutMs ?? 15_000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
         "user-agent":
+          opts?.userAgent ??
           "wildlife-blogger/0.1 (+https://example.invalid; research bot for conservation content analysis)"
       }
     });

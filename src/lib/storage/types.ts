@@ -2,13 +2,27 @@ export type PostStatus = "DRAFT" | "PUBLISHED";
 
 export type SourceType = "UPLOAD" | "PASTE" | "ORG_URL" | "COMPETITOR_URL";
 
+export type OrganizationObjective =
+  | "education"
+  | "donations"
+  | "awareness"
+  | "news"
+  | "species-info"
+  | "habitat-info"
+  | "advocacy"
+  | "volunteering";
+
 export type OrganizationProfile = {
   name: string;
+  website: string;
   tagline: string;
   mission: string;
+  focusAreas: string[];
+  objectives: OrganizationObjective[];
   voiceGuidelines: string;
   preferredTerms: string[];
   avoidTerms: string[];
+  onboardingCompletedAt: string | null;
 };
 
 export type BlogPostMeta = {
@@ -43,4 +57,3 @@ export type KnowledgeSourceMeta = {
 export type KnowledgeSource = KnowledgeSourceMeta & {
   contentText: string;
 };
-

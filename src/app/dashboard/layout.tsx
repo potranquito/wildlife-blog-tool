@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/server";
+import { getOrgProfile } from "@/lib/storage/org";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
+  const org = await getOrgProfile();
+  if (!org.onboardingCompletedAt) redirect("/onboarding");
 
   return (
     <div className="grid gap-6 md:grid-cols-[260px,1fr]">

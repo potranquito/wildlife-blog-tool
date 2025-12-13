@@ -20,6 +20,14 @@ export function generateWithTemplate(
     .slice(0, 8)
     .map((s) => `- ${s.url}`);
 
+  const aboutMetaLines = [
+    org.website ? `Website: ${org.website}` : "",
+    org.focusAreas.length ? `Focus: ${org.focusAreas.join(", ")}` : "",
+    org.objectives.length ? `Objectives: ${org.objectives.join(", ")}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const contentMarkdown = `# ${input.title}
 
 ## Summary
@@ -58,7 +66,7 @@ ${(input.subtitles.length ? input.subtitles : ["What to watch for", "How to talk
 
 **${org.name}** — ${org.tagline}
 
-${org.mission}
+${aboutMetaLines ? `${aboutMetaLines}\n\n` : ""}${org.mission}
 
 ${sourceLinks.length ? `## References\n${sourceLinks.join("\n")}` : ""}
 `;
@@ -78,4 +86,3 @@ ${sourceLinks.length ? `## References\n${sourceLinks.join("\n")}` : ""}
     contentMarkdown
   };
 }
-

@@ -3,13 +3,17 @@ import type { BlogPostMeta, OrganizationProfile } from "@/lib/storage/types";
 export function makeSeedProfile(): OrganizationProfile {
   return {
     name: "wildlife-blogger",
+    website: "",
     tagline: "AI-assisted storytelling for wildlife conservation",
     mission:
       "Help wildlife organizations educate and engage the public with accurate, hopeful, action-oriented content that supports conservation outcomes.",
+    focusAreas: [],
+    objectives: ["education", "awareness"],
     voiceGuidelines:
       "Warm, factual, and optimistic. Avoid doom-only framing; always include clear actions people can take. Use plain language, define scientific terms, and cite sources when making claims.",
     preferredTerms: ["habitat", "biodiversity", "conservation", "restoration", "wildlife corridors"],
-    avoidTerms: ["clickbait", "miracle cure", "guaranteed"]
+    avoidTerms: ["clickbait", "miracle cure", "guaranteed"],
+    onboardingCompletedAt: null
   };
 }
 
@@ -65,4 +69,3 @@ If you want, we can add a “citations required” mode next.
 
   return { id, meta, markdown };
 }
-
