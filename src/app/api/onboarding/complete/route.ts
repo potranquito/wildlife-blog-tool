@@ -5,6 +5,8 @@ import { updateOrgProfile } from "@/lib/storage/org";
 import { OrgProfileSchema } from "@/lib/storage/orgProfile";
 import { fetchAndExtractPage } from "@/lib/research/fetch";
 import { createSourceFromText } from "@/lib/storage/sources";
+import { addWatchedSource } from "@/lib/storage/watched-sources";
+import { detectFeedType } from "@/lib/feeds/detect-feed";
 import type { OrganizationObjective, OrganizationProfile } from "@/lib/storage/types";
 
 const BodySchema = z.object({
@@ -13,7 +15,9 @@ const BodySchema = z.object({
     .object({
       importWebsite: z.boolean().optional().default(true),
       wikipedia: z.boolean().optional().default(false),
-      starterPlan: z.boolean().optional().default(true)
+      starterPlan: z.boolean().optional().default(true),
+      monitorFeeds: z.array(z.string()).optional().default([]),
+      wikiTopics: z.array(z.string()).optional().default([])
     })
     .optional()
 });
@@ -259,5 +263,67 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ profile, seed, createdSourceIds, seedErrors });
+  // Add discovered wiki topics (from discovery phase)
+  const addedWikiTopics: string[] = [];
+  if (seed?.wikiTopics?.length) {
+    // Skip topics already added via focus areas wikipedia
+    const alreadyAdded = new Set(
+      profile.focusAreas
+        .slice(0, 3)
+        .map((f) => f.trim().toLowerCase())
+    );
+
+    for (const topic of seed.wikiTopics.slice(0, 5)) {
+      const topicLower = topic.toLowerCase();
+      if (alreadyAdded.has(topicLower)) continue;
+      alreadyAdded.add(topicLower);
+
+      try {
+        const summary = await fetchWikipediaSummary(topic);
+        if (!summary) continue;
+        const source = await createSourceFromText({
+          type: "PASTE",
+          title: `Wikipedia: ${summary.title}`,
+          url: summary.url,
+          contentText: `${summary.extract}\n\nNote: This is a Wikipedia summary excerpt. Verify key claims with primary sources before publishing.`
+        });
+        createdSourceIds.push(source.id);
+        addedWikiTopics.push(summary.title);
+      } catch {
+        // best-effort
+      }
+    }
+  }
+
+  // Add discovered monitor feeds (from discovery phase)
+  const addedMonitorFeeds: string[] = [];
+  if (seed?.monitorFeeds?.length) {
+    for (const feedUrl of seed.monitorFeeds.slice(0, 8)) {
+      try {
+        // Detect feed type
+        const detected = await detectFeedType(feedUrl);
+
+        // Add to watched sources
+        await addWatchedSource({
+          name: detected.name || new URL(feedUrl).hostname,
+          url: detected.feedUrl || feedUrl,
+          type: detected.type,
+          fetchIntervalHours: 24 // Daily by default
+        });
+
+        addedMonitorFeeds.push(detected.name || feedUrl);
+      } catch {
+        // best-effort - skip invalid feeds
+      }
+    }
+  }
+
+  return NextResponse.json({
+    profile,
+    seed,
+    createdSourceIds,
+    seedErrors,
+    addedWikiTopics,
+    addedMonitorFeeds
+  });
 }

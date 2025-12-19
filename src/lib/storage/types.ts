@@ -57,3 +57,31 @@ export type KnowledgeSourceMeta = {
 export type KnowledgeSource = KnowledgeSourceMeta & {
   contentText: string;
 };
+
+// Sources Monitor types
+export type WatchedSourceType = "RSS" | "HTML";
+
+export type WatchedSource = {
+  id: string;
+  name: string;
+  url: string;
+  type: WatchedSourceType;
+  enabled: boolean;
+  lastFetchedAt: string | null;
+  fetchIntervalHours: number;
+  createdAt: string;
+};
+
+export type FetchedArticle = {
+  id: string;
+  sourceId: string;
+  sourceName: string;
+  title: string;
+  url: string;
+  publishedAt: string | null;
+  fetchedAt: string;
+  excerpt: string;
+  matchedKeywords: string[];
+  relevanceScore: number;
+  savedToKnowledge: boolean;
+};

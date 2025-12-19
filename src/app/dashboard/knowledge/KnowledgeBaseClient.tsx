@@ -70,12 +70,10 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
     setBusy("fetch");
     try {
       const url = (form.elements.namedItem("url") as HTMLInputElement | null)?.value ?? "";
-      const type = ((form.elements.namedItem("type") as HTMLSelectElement | null)?.value ??
-        "COMPETITOR_URL") as SourceType;
       const res = await fetch("/api/sources/fetch-url", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url, type })
+        body: JSON.stringify({ url, type: "ORG_URL" })
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Fetch failed");
       form.reset();
@@ -101,7 +99,7 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="wb-card p-5">
+        <div className="wb-card overflow-hidden p-5">
           <div className="text-sm font-semibold">Upload</div>
           <form
             className="mt-3 grid gap-3"
@@ -110,15 +108,20 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
               void handleUpload(e.currentTarget);
             }}
           >
-            <input className="wb-input" name="file" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" />
-            <button className="wb-button" disabled={busy === "upload"} type="submit">
+            <input
+              className="wb-input w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-[var(--wb-accent)] file:px-3 file:py-1 file:text-sm file:text-white"
+              name="file"
+              type="file"
+              accept=".txt,.md,.markdown,.pdf,.doc,.docx,text/plain,text/markdown,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            />
+            <button className="wb-button w-full" disabled={busy === "upload"} type="submit">
               {busy === "upload" ? "Uploading…" : "Upload"}
             </button>
-            <div className="text-xs text-[var(--wb-muted)]">Supported: .txt, .md</div>
+            <div className="text-xs text-[var(--wb-muted)]">Supported: .txt, .md, .pdf, .docx</div>
           </form>
         </div>
 
-        <div className="wb-card p-5">
+        <div className="wb-card overflow-hidden p-5">
           <div className="text-sm font-semibold">Fetch a URL</div>
           <form
             className="mt-3 grid gap-3"
@@ -127,18 +130,14 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
               void handleFetchUrl(e.currentTarget);
             }}
           >
-            <input className="wb-input" name="url" placeholder="https://example.org/blog/post" />
-            <select className="wb-input" name="type" defaultValue="COMPETITOR_URL">
-              <option value="ORG_URL">Org URL</option>
-              <option value="COMPETITOR_URL">Competitor URL</option>
-            </select>
-            <button className="wb-button" disabled={busy === "fetch"} type="submit">
+            <input className="wb-input w-full" name="url" placeholder="https://example.org/blog/post" />
+            <button className="wb-button w-full" disabled={busy === "fetch"} type="submit">
               {busy === "fetch" ? "Fetching…" : "Fetch & save"}
             </button>
           </form>
         </div>
 
-        <div className="wb-card p-5">
+        <div className="wb-card overflow-hidden p-5">
           <div className="text-sm font-semibold">Paste notes</div>
           <form
             className="mt-3 grid gap-3"
@@ -147,9 +146,9 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
               void handlePaste(e.currentTarget);
             }}
           >
-            <input className="wb-input" name="title" placeholder="Title (e.g., Team notes)" />
-            <textarea className="wb-input min-h-28" name="contentText" placeholder="Paste plain text…" />
-            <button className="wb-button" disabled={busy === "paste"} type="submit">
+            <input className="wb-input w-full" name="title" placeholder="Title (e.g., Team notes)" />
+            <textarea className="wb-input w-full min-h-28" name="contentText" placeholder="Paste plain text…" />
+            <button className="wb-button w-full" disabled={busy === "paste"} type="submit">
               {busy === "paste" ? "Saving…" : "Save notes"}
             </button>
           </form>

@@ -121,8 +121,8 @@ export default function ResearchClient({ initial }: { initial: Analysis[] }) {
                 <div className="mt-5">
                   <div className="text-xs uppercase tracking-wide text-[var(--wb-muted)]">Key headings</div>
                   <ul className="mt-2 grid gap-1 text-sm text-[var(--wb-muted)]">
-                    {r.headings.h2.slice(0, 8).map((h) => (
-                      <li key={h}>• {h}</li>
+                    {r.headings.h2.slice(0, 8).map((h, i) => (
+                      <li key={i}>• {h}</li>
                     ))}
                   </ul>
                 </div>

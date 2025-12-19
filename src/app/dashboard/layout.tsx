@@ -11,8 +11,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!org.onboardingCompletedAt) redirect("/onboarding");
 
   return (
-    <div className="grid gap-6 md:grid-cols-[260px,1fr]">
-      <aside className="wb-card sticky top-24 h-fit p-5">
+    <div className="md:pl-[280px]">
+      <aside className="wb-card fixed left-4 top-24 z-10 hidden h-fit w-[260px] p-5 md:block">
         <div className="text-xs uppercase tracking-wide text-[var(--wb-muted)]">Dashboard</div>
         <div className="mt-3 grid gap-2 text-sm">
           <Link className="wb-button text-center" href="/dashboard">
@@ -23,6 +23,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Link>
           <Link className="wb-button text-center" href="/dashboard/research">
             Research
+          </Link>
+          <Link className="wb-button text-center" href="/dashboard/monitor">
+            Monitor
           </Link>
           <Link className="wb-button text-center" href="/dashboard/posts">
             Posts
@@ -35,7 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Link>
         </div>
       </aside>
-      <section className="min-w-0">{children}</section>
+      <main className="min-w-0">{children}</main>
     </div>
   );
 }
