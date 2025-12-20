@@ -46,7 +46,11 @@ export async function generateBlogDraft(args: {
     const raw = await generateWithAzureOpenAI(prompt);
     const obj = extractJsonObject(raw);
     const parsed = DraftSchema.safeParse(obj);
-    if (!parsed.success) throw new Error("Azure OpenAI returned invalid JSON payload");
+    if (!parsed.success) {
+      console.error("Azure OpenAI validation errors:", JSON.stringify(parsed.error.errors, null, 2));
+      console.error("Received object:", JSON.stringify(obj, null, 2));
+      throw new Error(`Azure OpenAI returned invalid JSON: ${parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
+    }
     return { ...parsed.data, provider: "azure-openai" };
   }
 

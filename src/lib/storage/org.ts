@@ -1,22 +1,20 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { initStorage } from "@/lib/storage/init";
-import { ORG_PROFILE_PATH } from "@/lib/storage/paths";
-import type { OrganizationProfile } from "@/lib/storage/types";
-import { makeSeedProfile } from "@/lib/storage/seed";
-import { normalizeOrgProfile } from "@/lib/storage/orgProfile";
+/**
+ * Organization profile storage - public API
+ *
+ * This module delegates to the configured storage provider.
+ */
+
+import { getStorageProvider, initStorage } from "./factory";
+import type { OrganizationProfile } from "./types";
 
 export async function getOrgProfile(): Promise<OrganizationProfile> {
   await initStorage();
-  try {
-    const raw = await readFile(ORG_PROFILE_PATH, "utf8");
-    return normalizeOrgProfile(JSON.parse(raw));
-  } catch {
-    return makeSeedProfile();
-  }
+  const provider = getStorageProvider();
+  return provider.org.get();
 }
 
-export async function updateOrgProfile(profile: OrganizationProfile) {
+export async function updateOrgProfile(profile: OrganizationProfile): Promise<OrganizationProfile> {
   await initStorage();
-  await writeFile(ORG_PROFILE_PATH, JSON.stringify(profile, null, 2), "utf8");
-  return profile;
+  const provider = getStorageProvider();
+  return provider.org.update(profile);
 }

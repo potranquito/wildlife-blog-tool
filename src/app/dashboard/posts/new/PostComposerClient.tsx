@@ -20,7 +20,11 @@ function badge(type: SourceType) {
 export default function PostComposerClient({ sources }: { sources: KnowledgeSourceMeta[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [suggestBusy, setSuggestBusy] = useState(false);
+  const [regeneratingField, setRegeneratingField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [quickStartExpanded, setQuickStartExpanded] = useState(true);
+  const [quickIdea, setQuickIdea] = useState("");
 
   const [title, setTitle] = useState("");
   const [subtitles, setSubtitles] = useState("");
@@ -32,6 +36,89 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
 
   const selectedCount = selected.size;
   const selectedIds = useMemo(() => Array.from(selected), [selected]);
+
+  async function getSuggestions(mode: "from-idea" | "surprise-me") {
+    setSuggestBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/posts/suggest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idea: mode === "from-idea" ? quickIdea : undefined,
+          mode,
+          includeSourceAnalysis: true
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Suggestion failed");
+
+      // Auto-fill the form
+      setTitle(data.title || "");
+      setSubtitles((data.subtitles || []).join("\n"));
+      setKeywords((data.keywords || []).join(", "));
+      setIdea(data.idea || "");
+      setAudience(data.targetAudience || "");
+      setCta(data.callToAction || "");
+
+      // Auto-select relevant sources
+      if (data.sources && Array.isArray(data.sources)) {
+        setSelected(new Set(data.sources));
+      }
+
+      // Collapse quick start after filling
+      setQuickStartExpanded(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Suggestion failed");
+    } finally {
+      setSuggestBusy(false);
+    }
+  }
+
+  async function regenerateField(field: string) {
+    setRegeneratingField(field);
+    setError(null);
+    try {
+      // Use current form values as context for regeneration
+      const res = await fetch("/api/posts/suggest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idea: idea || title || quickIdea,
+          mode: "from-idea",
+          includeSourceAnalysis: true
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Regeneration failed");
+
+      // Update only the specific field
+      switch (field) {
+        case "title":
+          setTitle(data.title || "");
+          break;
+        case "subtitles":
+          setSubtitles((data.subtitles || []).join("\n"));
+          break;
+        case "keywords":
+          setKeywords((data.keywords || []).join(", "));
+          break;
+        case "idea":
+          setIdea(data.idea || "");
+          break;
+        case "audience":
+          setAudience(data.targetAudience || "");
+          break;
+        case "cta":
+          setCta(data.callToAction || "");
+          break;
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Regeneration failed");
+    } finally {
+      setRegeneratingField(null);
+    }
+  }
 
   async function generate() {
     setBusy(true);
@@ -75,9 +162,66 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
       <header>
         <h1 className="text-2xl font-bold tracking-tight">New post</h1>
         <p className="mt-2 text-[var(--wb-muted)]">
-          Provide a title, keywords, and idea. Then generate a draft you can edit before publishing.
+          Start with a quick idea or fill in the details manually. Then generate a draft you can edit before publishing.
         </p>
       </header>
+
+      {/* Quick Start Section */}
+      <div className="wb-card overflow-hidden">
+        <button
+          className="flex w-full items-center justify-between p-5 text-left"
+          onClick={() => setQuickStartExpanded(!quickStartExpanded)}
+        >
+          <div>
+            <div className="text-sm font-semibold">💡 Quick Start</div>
+            <div className="mt-1 text-xs text-[var(--wb-muted)]">
+              Auto-fill the form from a short idea or get random inspiration
+            </div>
+          </div>
+          <div className="text-[var(--wb-muted)]">
+            {quickStartExpanded ? "▼" : "▶"}
+          </div>
+        </button>
+
+        {quickStartExpanded && (
+          <div className="border-t border-[var(--wb-border)] p-5">
+            <div className="grid gap-4">
+              <div>
+                <label className="text-sm font-semibold">Describe your blog post idea:</label>
+                <textarea
+                  className="wb-input mt-2 w-full"
+                  rows={2}
+                  value={quickIdea}
+                  onChange={(e) => setQuickIdea(e.target.value)}
+                  placeholder="e.g., Write about African elephant populations and conservation efforts..."
+                  disabled={suggestBusy}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  className="wb-button flex items-center gap-2"
+                  disabled={suggestBusy || quickIdea.trim().length < 5}
+                  onClick={() => void getSuggestions("from-idea")}
+                >
+                  {suggestBusy ? "✨ Generating..." : "✨ Auto-fill form"}
+                </button>
+                <button
+                  className="wb-button flex items-center gap-2"
+                  disabled={suggestBusy}
+                  onClick={() => void getSuggestions("surprise-me")}
+                >
+                  {suggestBusy ? "🎲 Generating..." : "🎲 Surprise me!"}
+                </button>
+              </div>
+
+              <div className="text-xs text-[var(--wb-muted)]">
+                💡 Tip: "Auto-fill form" uses your idea • "Surprise me" picks a random topic from your knowledge base
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {error ? (
         <div className="wb-card border-red-400/30 p-4 text-sm text-red-200">{error}</div>
@@ -87,11 +231,35 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
         <div className="wb-card p-6">
           <div className="grid gap-4">
             <div>
-              <label className="text-sm font-semibold">Title</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">Title</label>
+                {title && (
+                  <button
+                    className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                    onClick={() => void regenerateField("title")}
+                    disabled={regeneratingField !== null}
+                    title="Regenerate title"
+                  >
+                    {regeneratingField === "title" ? "↻ Regenerating..." : "↻ Regenerate"}
+                  </button>
+                )}
+              </div>
               <input className="wb-input mt-2 w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm font-semibold">Subtitles / section ideas (one per line)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">Subtitles / section ideas (one per line)</label>
+                {subtitles && (
+                  <button
+                    className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                    onClick={() => void regenerateField("subtitles")}
+                    disabled={regeneratingField !== null}
+                    title="Regenerate subtitles"
+                  >
+                    {regeneratingField === "subtitles" ? "↻ Regenerating..." : "↻ Regenerate"}
+                  </button>
+                )}
+              </div>
               <textarea
                 className="wb-input mt-2 min-h-28 w-full"
                 value={subtitles}
@@ -100,7 +268,19 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
               />
             </div>
             <div>
-              <label className="text-sm font-semibold">Target keywords (comma-separated)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">Target keywords (comma-separated)</label>
+                {keywords && (
+                  <button
+                    className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                    onClick={() => void regenerateField("keywords")}
+                    disabled={regeneratingField !== null}
+                    title="Regenerate keywords"
+                  >
+                    {regeneratingField === "keywords" ? "↻ Regenerating..." : "↻ Regenerate"}
+                  </button>
+                )}
+              </div>
               <input
                 className="wb-input mt-2 w-full"
                 value={keywords}
@@ -109,7 +289,19 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
               />
             </div>
             <div>
-              <label className="text-sm font-semibold">General idea / notes</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">General idea / notes</label>
+                {idea && (
+                  <button
+                    className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                    onClick={() => void regenerateField("idea")}
+                    disabled={regeneratingField !== null}
+                    title="Regenerate idea"
+                  >
+                    {regeneratingField === "idea" ? "↻ Regenerating..." : "↻ Regenerate"}
+                  </button>
+                )}
+              </div>
               <textarea
                 className="wb-input mt-2 min-h-40 w-full"
                 value={idea}
@@ -119,7 +311,19 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-semibold">Target audience (optional)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold">Target audience (optional)</label>
+                  {audience && (
+                    <button
+                      className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                      onClick={() => void regenerateField("audience")}
+                      disabled={regeneratingField !== null}
+                      title="Regenerate audience"
+                    >
+                      {regeneratingField === "audience" ? "↻" : "↻"}
+                    </button>
+                  )}
+                </div>
                 <input
                   className="wb-input mt-2 w-full"
                   value={audience}
@@ -128,7 +332,19 @@ export default function PostComposerClient({ sources }: { sources: KnowledgeSour
                 />
               </div>
               <div>
-                <label className="text-sm font-semibold">Call to action (optional)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold">Call to action (optional)</label>
+                  {cta && (
+                    <button
+                      className="text-xs text-[var(--wb-muted)] hover:text-[var(--wb-accent)] disabled:opacity-50"
+                      onClick={() => void regenerateField("cta")}
+                      disabled={regeneratingField !== null}
+                      title="Regenerate call to action"
+                    >
+                      {regeneratingField === "cta" ? "↻" : "↻"}
+                    </button>
+                  )}
+                </div>
                 <input
                   className="wb-input mt-2 w-full"
                   value={cta}

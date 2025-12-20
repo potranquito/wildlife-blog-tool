@@ -8,11 +8,11 @@ export async function POST(request: Request) {
 
   const adminPassword = getAdminPassword();
   if (!adminPassword || password !== adminPassword) {
-    return NextResponse.redirect(new URL("/login?error=1", getBaseUrl()));
+    return NextResponse.redirect(new URL("/login?error=1", getBaseUrl()), 303);
   }
 
   const token = createSessionToken();
-  const res = NextResponse.redirect(new URL("/dashboard", getBaseUrl()));
+  const res = NextResponse.redirect(new URL("/dashboard", getBaseUrl()), 303);
   res.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
   return res;
 }

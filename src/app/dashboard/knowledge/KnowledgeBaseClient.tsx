@@ -98,7 +98,7 @@ export default function KnowledgeBaseClient({ initialSources }: Props) {
         <div className="wb-card border-red-400/30 p-4 text-sm text-red-200">{error}</div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4">
         <div className="wb-card overflow-hidden p-5">
           <div className="text-sm font-semibold">Upload</div>
           <form

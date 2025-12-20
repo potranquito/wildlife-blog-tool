@@ -1,28 +1,22 @@
-import fs from "node:fs/promises";
-import crypto from "node:crypto";
-import { WATCHED_SOURCES_PATH } from "./paths";
+/**
+ * Watched sources storage - public API
+ *
+ * This module delegates to the configured storage provider.
+ */
+
+import { getStorageProvider, initStorage } from "./factory";
 import type { WatchedSource, WatchedSourceType } from "./types";
 
-async function readWatchedSources(): Promise<WatchedSource[]> {
-  try {
-    const data = await fs.readFile(WATCHED_SOURCES_PATH, "utf8");
-    return JSON.parse(data) as WatchedSource[];
-  } catch {
-    return [];
-  }
-}
-
-async function writeWatchedSources(sources: WatchedSource[]): Promise<void> {
-  await fs.writeFile(WATCHED_SOURCES_PATH, JSON.stringify(sources, null, 2), "utf8");
-}
-
 export async function listWatchedSources(): Promise<WatchedSource[]> {
-  return readWatchedSources();
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.list();
 }
 
 export async function getWatchedSourceById(id: string): Promise<WatchedSource | null> {
-  const sources = await readWatchedSources();
-  return sources.find((s) => s.id === id) ?? null;
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.getById(id);
 }
 
 export async function addWatchedSource(args: {
@@ -31,62 +25,28 @@ export async function addWatchedSource(args: {
   type: WatchedSourceType;
   fetchIntervalHours?: number;
 }): Promise<WatchedSource> {
-  const sources = await readWatchedSources();
-
-  // Check for duplicate URL
-  const existing = sources.find((s) => s.url === args.url);
-  if (existing) {
-    throw new Error("This URL is already being watched");
-  }
-
-  const source: WatchedSource = {
-    id: crypto.randomUUID(),
-    name: args.name,
-    url: args.url,
-    type: args.type,
-    enabled: true,
-    lastFetchedAt: null,
-    fetchIntervalHours: args.fetchIntervalHours ?? 24,
-    createdAt: new Date().toISOString()
-  };
-
-  sources.push(source);
-  await writeWatchedSources(sources);
-  return source;
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.add(args);
 }
 
 export async function updateWatchedSource(
   id: string,
   updates: Partial<Pick<WatchedSource, "name" | "enabled" | "fetchIntervalHours" | "lastFetchedAt">>
 ): Promise<WatchedSource | null> {
-  const sources = await readWatchedSources();
-  const index = sources.findIndex((s) => s.id === id);
-  if (index === -1) return null;
-
-  sources[index] = { ...sources[index], ...updates };
-  await writeWatchedSources(sources);
-  return sources[index];
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.update(id, updates);
 }
 
 export async function deleteWatchedSource(id: string): Promise<boolean> {
-  const sources = await readWatchedSources();
-  const filtered = sources.filter((s) => s.id !== id);
-  if (filtered.length === sources.length) return false;
-
-  await writeWatchedSources(filtered);
-  return true;
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.delete(id);
 }
 
 export async function getSourcesDueForFetch(): Promise<WatchedSource[]> {
-  const sources = await readWatchedSources();
-  const now = Date.now();
-
-  return sources.filter((s) => {
-    if (!s.enabled) return false;
-    if (!s.lastFetchedAt) return true;
-
-    const lastFetch = new Date(s.lastFetchedAt).getTime();
-    const intervalMs = s.fetchIntervalHours * 60 * 60 * 1000;
-    return now - lastFetch >= intervalMs;
-  });
+  await initStorage();
+  const provider = getStorageProvider();
+  return provider.watchedSources.getDueForFetch();
 }

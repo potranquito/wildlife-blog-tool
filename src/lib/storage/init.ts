@@ -1,53 +1,8 @@
-import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { constants } from "node:fs";
-import { ORG_PROFILE_PATH, POSTS_DIR, SOURCES_DIR } from "@/lib/storage/paths";
-import { makeSeedPost, makeSeedProfile } from "@/lib/storage/seed";
-import { normalizeOrgProfile } from "@/lib/storage/orgProfile";
+/**
+ * Storage initialization - legacy export
+ *
+ * This module now delegates to the factory.
+ * Kept for backward compatibility.
+ */
 
-let initPromise: Promise<void> | undefined;
-
-async function fileExists(path: string) {
-  try {
-    await access(path, constants.F_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function initStorage() {
-  if (!initPromise) initPromise = initStorageImpl();
-  return initPromise;
-}
-
-async function initStorageImpl() {
-  await mkdir(POSTS_DIR, { recursive: true });
-  await mkdir(SOURCES_DIR, { recursive: true });
-
-  const hasOrg = await fileExists(ORG_PROFILE_PATH);
-  if (!hasOrg) {
-    const profile = makeSeedProfile();
-    await writeFile(ORG_PROFILE_PATH, JSON.stringify(profile, null, 2), "utf8");
-  } else {
-    try {
-      const raw = await readFile(ORG_PROFILE_PATH, "utf8");
-      const json = JSON.parse(raw) as unknown;
-      const normalized = normalizeOrgProfile(json, { markOnboardingCompleteIfLegacyCustomized: true });
-      const next = JSON.stringify(normalized, null, 2);
-      if (raw.trim() !== next.trim()) {
-        await writeFile(ORG_PROFILE_PATH, next, "utf8");
-      }
-    } catch {
-      const profile = makeSeedProfile();
-      await writeFile(ORG_PROFILE_PATH, JSON.stringify(profile, null, 2), "utf8");
-    }
-  }
-
-  const posts = await readdir(POSTS_DIR);
-  const hasAnyPost = posts.some((f) => f.endsWith(".json"));
-  if (!hasAnyPost) {
-    const seed = makeSeedPost();
-    await writeFile(`${POSTS_DIR}/${seed.id}.json`, JSON.stringify(seed.meta, null, 2), "utf8");
-    await writeFile(`${POSTS_DIR}/${seed.id}.md`, seed.markdown, "utf8");
-  }
-}
+export { initStorage } from "./factory";
